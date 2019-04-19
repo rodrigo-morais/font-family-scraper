@@ -1,4 +1,4 @@
-const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls  } = require('../../src/lib/filterFonts')
+const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls  } = require('../../../src/lib/filterFonts')
 
 describe('when filter inline style', () => {
   describe('when html does not have style', () => {
@@ -161,7 +161,7 @@ describe('when get stylesheet urls', () => {
       })
     })
 
-    describe('when headi and body have stylesheet', () => {
+    describe('when head and body have stylesheet', () => {
       const html = `<html>
         <head>
           <link href="http://domain/head.css" rel="stylesheet" type="text/css">
