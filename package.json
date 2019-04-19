@@ -9,6 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "css": "^2.2.4",
     "parse5": "^5.1.0"
   },
   "devDependencies": {
