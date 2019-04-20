@@ -4,7 +4,7 @@ This an API to scrape websites and collect the `fonts` that are being used on th
 
 The scraper will get `fonts` from inline style and stylesheets links.
 
-The API can scrape in the maximum 100 websites.
+The API can scrape in the maximum 100 websites. If the website has errors in the style it won't be scraped.
 
 ## Install dependencies
 

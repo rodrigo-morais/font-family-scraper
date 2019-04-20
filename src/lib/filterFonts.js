@@ -5,12 +5,12 @@ const getFontNameFromStyleAttrs = (node) =>
   node.attrs && node.attrs.length > 0 ?
     node.attrs
       .filter(attr => attr.name === 'style')
-      .flatMap(style => style.value.split(';'))
+      .flatMap(style => style.value.split(/[};]+/))
       .filter(style => style.includes('font-family'))
       .flatMap(font => font.split(':')[1].replace(/\s+|['"]+/g,'').split(',')) : []
 
 const getFontNameFromStyleElement = node =>
-  node.childNodes[0].value.split(';')
+  node.childNodes[0].value.split(/[};]+/)
     .filter(style => style.includes('font-family'))
     .flatMap(font => font.split(':')[1].replace(/\s+|['"]+/g,''))
 
