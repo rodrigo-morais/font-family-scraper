@@ -1,7 +1,7 @@
 const { getFonts } = require('./service')
 
 const parseFonts = async (req, res) => {
-  const domains = req.body.domains || []
+  const domains = (req.body.domains || []).slice(0,100)
 
   try {
     const result = await getFonts(req.body.domains)
