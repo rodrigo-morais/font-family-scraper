@@ -25,10 +25,17 @@ const filterStylesheetFiles = (html, domain) =>
     .catch(_ => [])
 
 const processedDomains = []
-const getFonts = async (currentDomain, mainDomain, level = 0) => {
+let numberOfPages = 0
+const getFonts = async (currentDomain, deep, quantityOfPages, level = 0, mainDomain) => {
   try {
-    if (processedDomains.includes(currentDomain) || level >= 2) { return [] }
+    if (processedDomains.includes(currentDomain) ||
+      level > Math.min(deep, 2) ||
+      numberOfPages >= Math.min(quantityOfPages, 100)) {
+      return []
+    }
     processedDomains.push(currentDomain)
+    numberOfPages = numberOfPages + 1
+
 
     const response = await axios.get(currentDomain)
     const data = response.data
@@ -37,7 +44,7 @@ const getFonts = async (currentDomain, mainDomain, level = 0) => {
 
       return Promise.all(
         subdomains
-          .flatMap(async domain => await getFonts(domain, mainDomain || currentDomain, level + 1))
+          .flatMap(async domain => await getFonts(domain, deep, quantityOfPages, level + 1, mainDomain || currentDomain))
       )
         .then(async result =>
           [
@@ -55,14 +62,19 @@ const getFonts = async (currentDomain, mainDomain, level = 0) => {
   }
 }
 
-const getDomainsFonts = domains =>
+const getDomainsFonts = (domains, deep = 0, quantityOfPages = 100) =>
   Promise.all(
     domains.map(async domain => ({
       domain,
-      result: await getFonts(domain)
+      result: await getFonts(domain, deep, quantityOfPages)
     }))
   )
-    .then(result => result)
+    .then(result => {
+      processedDomains.length = 0
+      numberOfPages = 0
+
+      return result
+    })
 
 
 module.exports = {
