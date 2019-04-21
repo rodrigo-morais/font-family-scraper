@@ -1,6 +1,6 @@
 const axios = require("axios")
 
-const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls } = require('../../lib/filterFonts')
+const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getSubdomains } = require('../../lib/filterFonts')
 
 const getValidUrl = (url, domain) => {
   if (url.slice(0,4) === 'http') {
@@ -24,17 +24,47 @@ const filterStylesheetFiles = (html, domain) =>
     .then(result => result.flatMap(fonts => fonts))
     .catch(_ => [])
 
-const getFonts = domains =>
-  Promise.all(domains.map(async domain => {
-    const response = await axios.get(domain)
+const processedDomains = []
+const getFonts = async (currentDomain, mainDomain, level = 0) => {
+  try {
+    if (processedDomains.includes(currentDomain) || level >= 2) { return [] }
+    processedDomains.push(currentDomain)
+
+    const response = await axios.get(currentDomain)
     const data = response.data
 
-    return {
+    const subdomains = [...new Set(getSubdomains(data, currentDomain, mainDomain || currentDomain))]
+
+      return Promise.all(
+        subdomains
+          .flatMap(async domain => await getFonts(domain, mainDomain || currentDomain, level + 1))
+      )
+        .then(async result =>
+          [
+            {
+              domain: currentDomain,
+              subdomains,
+              fonts: [...new Set(getInlineFonts(data)), ...new Set(await filterStylesheetFiles(data, currentDomain))],
+              state: 'Success'
+            }, ...result.flatMap(domain => domain)
+          ]
+        )
+  } catch(error) {
+    processedDomains.push(currentDomain)
+    return [{ domain: currentDomain, state: 'Error' }]
+  }
+}
+
+const getDomainsFonts = domains =>
+  Promise.all(
+    domains.map(async domain => ({
       domain,
-      fonts: [...new Set(getInlineFonts(data)), ...new Set(await filterStylesheetFiles(data, domain))]
-    }
-  }))
+      result: await getFonts(domain)
+    }))
+  )
+    .then(result => result)
+
 
 module.exports = {
-  getFonts
+  getDomainsFonts
 }

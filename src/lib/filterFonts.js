@@ -61,8 +61,44 @@ const getStylesheetsUrls = html =>
   filterStylesheets(html)
     .map(link => link.attrs.find(attr => attr.name === 'href').value)
 
+const filterLinks = (currentDomain, mainDomain) => (node) => {
+  if (node.nodeName === 'a') {
+
+    const link = node.attrs
+      .find(attr => attr.name ==='href' &&
+        attr.value !== currentDomain &&
+        attr.value !== mainDomain &&
+        attr.value !== '/' &&
+        (attr.value.slice(0, currentDomain.length) === currentDomain ||
+        attr.value.slice(0, mainDomain.length) === mainDomain ||
+        (attr.value.slice(0, 1) === '/' && attr.value.slice(1,1) !== '/'))
+      )
+
+    if (link) {
+      return link.value.slice(0,1) === '/' ?
+        [`${mainDomain.slice(-1) === '/' ? mainDomain.slice(0, mainDomain.length - 1) : domain}${link.value}`] :
+        [link.value]
+    } else {
+      return []
+    }
+  } else if (node.childNodes) {
+    return node.childNodes.flatMap(filterLinks(currentDomain, mainDomain))
+  } else {
+    return []
+  }
+}
+
+const getSubdomains = (html, currentDomain, mainDomain) => {
+  const body = parse5.parse(html).childNodes
+    .find(node => node.nodeName === 'html').childNodes
+    .find(node => node.nodeName === 'body')
+
+  return filterLinks(currentDomain, mainDomain)(body)
+}
+
 module.exports = {
   getInlineFonts,
   getStylesheetFonts,
-  getStylesheetsUrls
+  getStylesheetsUrls,
+  getSubdomains
 }
