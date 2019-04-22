@@ -8,7 +8,7 @@ const parseFonts = async (req, res) => {
 
     res.status(200).json(result)
   } catch (error) {
-    res.status(500).send('Error when scrapping the websites.')
+    res.status(500).send('Error when scraping the websites.')
   }
 }
 
