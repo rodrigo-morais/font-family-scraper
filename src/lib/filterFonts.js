@@ -63,7 +63,6 @@ const getStylesheetsUrls = html =>
 
 const filterLinks = (currentDomain, mainDomain) => (node) => {
   if (node.nodeName === 'a') {
-
     const link = node.attrs
       .find(attr => attr.name ==='href' &&
         attr.value !== currentDomain &&

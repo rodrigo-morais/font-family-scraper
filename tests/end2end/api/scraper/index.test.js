@@ -25,7 +25,8 @@ describe('parseFonts', () => {
       .end((err, res) => {
         expect(res.statusCode).toBe(200)
         expect(res.body[0].domain).toEqual('https://webflow.com/') 
-        expect(res.body[0].fonts).toBeInstanceOf(Array)
+        expect(res.body[0].result[0].state).toEqual('Success')
+        expect(res.body[0].result).toBeInstanceOf(Array)
         done()
       })
   })
@@ -37,7 +38,9 @@ describe('parseFonts', () => {
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .end((err, res) => {
-        expect(res.statusCode).toBe(500)
+        expect(res.statusCode).toBe(200)
+        expect(res.body[0].domain).toEqual('invalid')
+        expect(res.body[0].result[0].state).toEqual('Error')
         done()
       })
   })

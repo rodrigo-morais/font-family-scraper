@@ -1,4 +1,4 @@
-const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls  } = require('../../../src/lib/filterFonts')
+const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getPaths } = require('../../../src/lib/filterFonts')
 
 describe('when filter inline style', () => {
   describe('when html does not have style', () => {
@@ -176,6 +176,31 @@ describe('when get stylesheet urls', () => {
 
         expect(getStylesheetsUrls(html)).toEqual(expected)
       })
+    })
+  })
+})
+
+describe('when get paths', () => {
+  describe('when does not exist paths', () => {
+    const html = '<html><head></head><body></body></html>'
+
+    it('returns empty array of paths', () => {
+      expect(getPaths(html, '', '')).toEqual([])
+    })
+  })
+
+  describe('when has path', () => {
+    const html = `<html>
+      <head>
+        <link href="http://domain/head.css" rel="stylesheet" type="text/css">
+      </head>
+      <body><a href='/relative'>test</a></body>
+    </html>`
+
+    it('returns an array with paths', () => {
+      const expected = ['http://domain/relative']
+
+      expect(getPaths(html, 'http://domain/', 'http://domain/')).toEqual(expected)
     })
   })
 })
