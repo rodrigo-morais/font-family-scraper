@@ -1,6 +1,7 @@
 const axios = require("axios")
+const uuidv4 = require('uuid/v4')
 
-const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getSubdomains } = require('../../lib/filterFonts')
+const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getPaths } = require('../../lib/filterFonts')
 
 const getValidUrl = (url, domain) => {
   if (url.slice(0,4) === 'http') {
@@ -24,56 +25,74 @@ const filterStylesheetFiles = (html, domain) =>
     .then(result => result.flatMap(fonts => fonts))
     .catch(_ => [])
 
-const processedDomains = []
-let numberOfPages = 0
-const getFonts = async (currentDomain, deep, quantityOfPages, level = 0, mainDomain) => {
+const controllers = []
+
+const getControllers = uuid =>
+  controllers.find(controller => controller.uuid === uuid) || ({ processedDomains: [], numberOfPages: 0 })
+
+const setControllers = (uuid, domain) => {
+  const controller = getControllers(uuid)
+  controller.processedDomains.push(domain)
+  controller.numberOfPages = controller.numberOfPages + 1
+
+  if(!controller.uuid) {
+    controller.uuid = uuid
+    controllers.push(controller)
+  }
+}
+
+
+const getFonts = async (uuid, currentDomain, deep, quantityOfPages, level = 0, mainDomain) => {
   try {
+    const { processedDomains, numberOfPages } = getControllers(uuid)
     if (processedDomains.includes(currentDomain) ||
       level > Math.min(deep, 2) ||
       numberOfPages >= Math.min(quantityOfPages, 100)) {
       return []
     }
-    processedDomains.push(currentDomain)
-    numberOfPages = numberOfPages + 1
+    setControllers(uuid, currentDomain)
 
 
     const response = await axios.get(currentDomain)
     const data = response.data
 
-    const subdomains = [...new Set(getSubdomains(data, currentDomain, mainDomain || currentDomain))]
+    const paths = [...new Set(getPaths(data, currentDomain, mainDomain || currentDomain))]
 
       return Promise.all(
-        subdomains
-          .flatMap(async domain => await getFonts(domain, deep, quantityOfPages, level + 1, mainDomain || currentDomain))
+        paths
+          .flatMap(async domain => await getFonts(uuid, domain, deep, quantityOfPages, level + 1, mainDomain || currentDomain))
       )
         .then(async result =>
           [
             {
               domain: currentDomain,
-              subdomains,
+              paths,
               fonts: [...new Set(getInlineFonts(data)), ...new Set(await filterStylesheetFiles(data, currentDomain))],
               state: 'Success'
             }, ...result.flatMap(domain => domain)
           ]
         )
   } catch(error) {
-    processedDomains.push(currentDomain)
     return [{ domain: currentDomain, state: 'Error' }]
   }
 }
 
 const getDomainsFonts = (domains, deep = 0, quantityOfPages = 100) =>
   Promise.all(
-    domains.map(async domain => ({
-      domain,
-      result: await getFonts(domain, deep, quantityOfPages)
-    }))
+    domains.map(async domain => {
+      const uuid = uuidv4()
+      return {
+        uuid,
+        domain,
+        result: await getFonts(uuid, domain, deep, quantityOfPages)
+      }
+    })
   )
     .then(result => {
-      processedDomains.length = 0
-      numberOfPages = 0
+      const uuids = result.map(r => r.uuid)
+      controllers.splice(controllers.findIndex(controller => uuids.includes(controller.uuid)), 1)
 
-      return result
+      return result.map(r => ({ domain: r.domain, result: r.result }))
     })
 
 

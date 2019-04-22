@@ -76,7 +76,7 @@ const filterLinks = (currentDomain, mainDomain) => (node) => {
 
     if (link) {
       return link.value.slice(0,1) === '/' ?
-        [`${mainDomain.slice(-1) === '/' ? mainDomain.slice(0, mainDomain.length - 1) : domain}${link.value}`] :
+        [`${mainDomain.slice(-1) === '/' ? mainDomain.slice(0, mainDomain.length - 1) : mainDomain}${link.value}`] :
         [link.value]
     } else {
       return []
@@ -88,7 +88,7 @@ const filterLinks = (currentDomain, mainDomain) => (node) => {
   }
 }
 
-const getSubdomains = (html, currentDomain, mainDomain) => {
+const getPaths = (html, currentDomain, mainDomain) => {
   const body = parse5.parse(html).childNodes
     .find(node => node.nodeName === 'html').childNodes
     .find(node => node.nodeName === 'body')
@@ -100,5 +100,5 @@ module.exports = {
   getInlineFonts,
   getStylesheetFonts,
   getStylesheetsUrls,
-  getSubdomains
+  getPaths
 }
