@@ -1,7 +1,7 @@
 const axios = require("axios")
 const uuidv4 = require('uuid/v4')
 
-const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getPaths } = require('../../lib/filterFonts')
+const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getPaths } = require('../../lib/scraper')
 
 const getValidUrl = (url, domain) => {
   if (url.slice(0,4) === 'http') {
@@ -46,8 +46,8 @@ const getFonts = async (uuid, currentDomain, deep, quantityOfPages, level = 0, m
   try {
     const { processedDomains, numberOfPages } = getControllers(uuid)
     if (processedDomains.includes(currentDomain) ||
-      level > Math.min(deep, 2) ||
-      numberOfPages >= Math.min(quantityOfPages, 100)) {
+      level > Math.min(Math.abs(deep), 2) ||
+      numberOfPages >= Math.min(Math.abs(quantityOfPages), 100)) {
       return []
     }
     setControllers(uuid, currentDomain)
@@ -77,7 +77,7 @@ const getFonts = async (uuid, currentDomain, deep, quantityOfPages, level = 0, m
   }
 }
 
-const getDomainsFonts = (domains, deep = 0, quantityOfPages = 100) =>
+const getDomainsFonts = (domains, deep = 0, quantityOfPages = 10) =>
   Promise.all(
     domains.map(async domain => {
       const uuid = uuidv4()

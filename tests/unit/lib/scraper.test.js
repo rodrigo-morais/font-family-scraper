@@ -1,4 +1,4 @@
-const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getPaths } = require('../../../src/lib/filterFonts')
+const { getInlineFonts, getStylesheetFonts, getStylesheetsUrls, getPaths } = require('../../../src/lib/scraper')
 
 describe('when filter inline style', () => {
   describe('when html does not have style', () => {

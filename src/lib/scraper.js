@@ -31,13 +31,10 @@ const getFontName = node => {
   }
 }
 
-const getFonts = node => {
-  if (node.childNodes) {
-    return [...getFontName(node), ...node.childNodes.flatMap(getFonts)]
-  } else {
-    return getFontName(node)
-  }
-}
+const getFonts = node =>
+  node.childNodes ?
+    [...getFontName(node), ...node.childNodes.flatMap(getFonts)] :
+    getFontName(node)
 
 const getInlineFonts = html =>
   getFonts(parse5.parse(html).childNodes.find(node => node.nodeName === 'html'))
@@ -61,8 +58,7 @@ const getStylesheetsUrls = html =>
   filterStylesheets(html)
     .map(link => link.attrs.find(attr => attr.name === 'href').value)
 
-const filterLinks = (currentDomain, mainDomain) => (node) => {
-  if (node.nodeName === 'a') {
+const getPath = (node, currentDomain, mainDomain) => {
     const link = node.attrs
       .find(attr => attr.name ==='href' &&
         attr.value !== currentDomain &&
@@ -80,6 +76,11 @@ const filterLinks = (currentDomain, mainDomain) => (node) => {
     } else {
       return []
     }
+}
+
+const filterLinks = (currentDomain, mainDomain) => (node) => {
+  if (node.nodeName === 'a') {
+    return getPath(node, currentDomain, mainDomain)
   } else if (node.childNodes) {
     return node.childNodes.flatMap(filterLinks(currentDomain, mainDomain))
   } else {
@@ -87,13 +88,11 @@ const filterLinks = (currentDomain, mainDomain) => (node) => {
   }
 }
 
-const getPaths = (html, currentDomain, mainDomain) => {
-  const body = parse5.parse(html).childNodes
-    .find(node => node.nodeName === 'html').childNodes
-    .find(node => node.nodeName === 'body')
-
-  return filterLinks(currentDomain, mainDomain)(body)
-}
+const getPaths = (html, currentDomain, mainDomain) =>
+  filterLinks(currentDomain, mainDomain)(
+    parse5.parse(html).childNodes
+      .find(node => node.nodeName === 'html').childNodes
+      .find(node => node.nodeName === 'body'))
 
 module.exports = {
   getInlineFonts,
